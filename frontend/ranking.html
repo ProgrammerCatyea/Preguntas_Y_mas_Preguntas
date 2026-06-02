@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Ranking - Trivia Multiplayer</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>🏆 Ranking Global</h1>
+
+        <!-- PODIO -->
+
+        <div class="podium">
+
+            <div class="place silver">
+
+                <h2>🥈</h2>
+
+                <h3 id="silverName">-</h3>
+
+                <p id="silverPoints">0</p>
+
+            </div>
+
+            <div class="place gold">
+
+                <h2>🥇</h2>
+
+                <h3 id="goldName">-</h3>
+
+                <p id="goldPoints">0</p>
+
+            </div>
+
+            <div class="place bronze">
+
+                <h2>🥉</h2>
+
+                <h3 id="bronzeName">-</h3>
+
+                <p id="bronzePoints">0</p>
+
+            </div>
+
+        </div>
+
+        <!-- TABLA -->
+
+        <div class="card">
+
+            <table class="ranking-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>#</th>
+                        <th>Jugador</th>
+                        <th>Puntos</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="rankingBody">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <button
+            class="btn btn-primary"
+            style="margin-top:20px;"
+            onclick="window.location.href='game.html'">
+
+            Volver al Juego
+
+        </button>
+
+    </div>
+
+    <script src="app.js"></script>
+
+    <script>
+
+        loadPodium();
+        loadRanking();
+
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Trivia Game</title>
+
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="header">
+
+            <h1>🧠 Trivia Multiplayer</h1>
+
+            <div class="score">
+
+                Puntaje:
+                <span id="score">0</span>
+
+            </div>
+
+        </div>
+
+        <div class="card question-box">
+
+            <div class="question" id="question">
+
+                Cargando pregunta...
+
+            </div>
+
+            <div class="answers">
+
+                <button
+                    id="btnA"
+                    class="answer-btn answer-a"
+                    onclick="answer('A')">
+
+                    Opción A
+
+                </button>
+
+                <button
+                    id="btnB"
+                    class="answer-btn answer-b"
+                    onclick="answer('B')">
+
+                    Opción B
+
+                </button>
+
+                <button
+                    id="btnC"
+                    class="answer-btn answer-c"
+                    onclick="answer('C')">
+
+                    Opción C
+
+                </button>
+
+                <button
+                    id="btnD"
+                    class="answer-btn answer-d"
+                    onclick="answer('D')">
+
+                    Opción D
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="card" style="margin-top:20px;">
+
+            <h2> Chat en tiempo real</h2>
+
+            <div
+                id="chat"
+                class="chat">
+
+            </div>
+
+            <div class="chat-input">
+
+                <input
+                    type="text"
+                    id="message"
+                    placeholder="Escribe un mensaje">
+
+                <button
+                    class="btn btn-primary"
+                    onclick="sendMessage()">
+
+                    Enviar
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <button
+            class="btn btn-secondary"
+            style="margin-top:20px;"
+            onclick="window.location.href='ranking.html'">
+
+            Ver Ranking
+
+        </button>
+
+    </div>
+
+    <script src="app.js"></script>
+
+    <script>
+
+        document.getElementById("score")
+            .innerText =
+            localStorage.getItem("points") || 0;
+
+        loadQuestions();
+
+        connectWebSocket();
+
+    </script>
+
+</body>
+
+</html>
