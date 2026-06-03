@@ -1,4 +1,4 @@
-const API = "http://127.0.0.1:8000";
+const API = window.location.origin;
 
 
 
@@ -88,7 +88,7 @@ async function login() {
                 data.points
             );
 
-            window.location.href = "game.html";
+            window.location.href = "/game";
 
         } else {
 
@@ -136,8 +136,7 @@ function showQuestion() {
 
         alert("Trivia finalizada");
 
-        window.location.href =
-            "ranking.html";
+        window.location.href = "/ranking-page";
 
         return;
     }
@@ -316,7 +315,7 @@ function connectWebSocket() {
 
     socket =
         new WebSocket(
-            `ws://127.0.0.1:8000/ws/${username}`
+            `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/ws/${username}`
         );
 
     socket.onmessage = function(event) {
