@@ -1,5 +1,9 @@
+from pathlib import Path
+
 from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from passlib.hash import bcrypt
 
@@ -7,7 +11,16 @@ from database import Base, engine, get_db
 from models import User, Question, Match, Result
 from websocket import manager
 
+
+BASE_DIR = Path(__file__).resolve().parent
+FRONTEND_DIR = BASE_DIR.parent / "frontend"
+
 app = FastAPI(title="Trivia Multiplayer API")
+
+
+# ==========================
+# CORS
+# ==========================
 
 app.add_middleware(
     CORSMiddleware,
@@ -17,17 +30,47 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Crear tablas
+
+# ==========================
+# ARCHIVOS ESTÁTICOS
+# ==========================
+
+app.mount(
+    "/static",
+    StaticFiles(directory=str(FRONTEND_DIR)),
+    name="static"
+)
+
+
+# ==========================
+# CREAR TABLAS
+# ==========================
+
 Base.metadata.create_all(bind=engine)
 
 
 # ==========================
-# HOME
+# PÁGINAS HTML
 # ==========================
 
 @app.get("/")
-def home():
-    return {"message": "Trivia Multiplayer API funcionando"}
+def root():
+    return FileResponse(FRONTEND_DIR / "login.html")
+
+
+@app.get("/game")
+def game():
+    return FileResponse(FRONTEND_DIR / "game.html")
+
+
+@app.get("/ranking-page")
+def ranking_page():
+    return FileResponse(FRONTEND_DIR / "ranking.html")
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 
 # ==========================
@@ -106,14 +149,18 @@ def login(
 
 
 # ==========================
-# CARGAR PREGUNTAS
+# PREGUNTAS INICIALES
 # ==========================
 
 @app.post("/seed-questions")
 def seed_questions(db: Session = Depends(get_db)):
 
-    questions = [
+    existing = db.query(Question).count()
 
+    if existing > 0:
+        return {"message": "Las preguntas ya existen"}
+
+    questions = [
         {
             "question": "Capital de Colombia",
             "a": "Medellin",
@@ -122,7 +169,6 @@ def seed_questions(db: Session = Depends(get_db)):
             "d": "Cartagena",
             "correct": "B"
         },
-
         {
             "question": "2 + 2",
             "a": "3",
@@ -131,7 +177,6 @@ def seed_questions(db: Session = Depends(get_db)):
             "d": "6",
             "correct": "B"
         },
-
         {
             "question": "Color del cielo",
             "a": "Azul",
@@ -140,25 +185,24 @@ def seed_questions(db: Session = Depends(get_db)):
             "d": "Negro",
             "correct": "A"
         }
-
     ]
 
     for q in questions:
 
-        question = Question(
-            question=q["question"],
-            option_a=q["a"],
-            option_b=q["b"],
-            option_c=q["c"],
-            option_d=q["d"],
-            correct_answer=q["correct"]
+        db.add(
+            Question(
+                question=q["question"],
+                option_a=q["a"],
+                option_b=q["b"],
+                option_c=q["c"],
+                option_d=q["d"],
+                correct_answer=q["correct"]
+            )
         )
-
-        db.add(question)
 
     db.commit()
 
-    return {"message": "Preguntas agregadas"}
+    return {"message": "Preguntas agregadas correctamente"}
 
 
 # ==========================
@@ -166,8 +210,9 @@ def seed_questions(db: Session = Depends(get_db)):
 # ==========================
 
 @app.get("/questions")
-def get_questions(db: Session = Depends(get_db)):
-
+def get_questions(
+    db: Session = Depends(get_db)
+):
     return db.query(Question).all()
 
 
@@ -176,11 +221,11 @@ def get_questions(db: Session = Depends(get_db)):
 # ==========================
 
 @app.post("/create-match")
-def create_match(db: Session = Depends(get_db)):
+def create_match(
+    db: Session = Depends(get_db)
+):
 
-    match = Match(
-        status="waiting"
-    )
+    match = Match(status="waiting")
 
     db.add(match)
     db.commit()
@@ -203,11 +248,9 @@ def join_match(
     db: Session = Depends(get_db)
 ):
 
-    user = (
-        db.query(User)
-        .filter(User.id == user_id)
-        .first()
-    )
+    user = db.query(User).filter(
+        User.id == user_id
+    ).first()
 
     if not user:
         raise HTTPException(
@@ -215,11 +258,9 @@ def join_match(
             detail="Usuario no encontrado"
         )
 
-    match = (
-        db.query(Match)
-        .filter(Match.id == match_id)
-        .first()
-    )
+    match = db.query(Match).filter(
+        Match.id == match_id
+    ).first()
 
     if not match:
         raise HTTPException(
@@ -227,20 +268,23 @@ def join_match(
             detail="Partida no encontrada"
         )
 
-    result = Result(
-        user_id=user_id,
-        match_id=match_id,
-        score=0
+    db.add(
+        Result(
+            user_id=user_id,
+            match_id=match_id,
+            score=0
+        )
     )
 
-    db.add(result)
     db.commit()
 
-    return {"message": "Jugador unido a la partida"}
+    return {
+        "message": "Jugador unido a la partida"
+    }
 
 
 # ==========================
-# RESPONDER PREGUNTA
+# RESPONDER
 # ==========================
 
 @app.post("/answer")
@@ -251,11 +295,9 @@ def answer_question(
     db: Session = Depends(get_db)
 ):
 
-    question = (
-        db.query(Question)
-        .filter(Question.id == question_id)
-        .first()
-    )
+    question = db.query(Question).filter(
+        Question.id == question_id
+    ).first()
 
     if not question:
         raise HTTPException(
@@ -263,11 +305,9 @@ def answer_question(
             detail="Pregunta no encontrada"
         )
 
-    user = (
-        db.query(User)
-        .filter(User.id == user_id)
-        .first()
-    )
+    user = db.query(User).filter(
+        User.id == user_id
+    ).first()
 
     if not user:
         raise HTTPException(
@@ -278,7 +318,6 @@ def answer_question(
     if answer.upper() == question.correct_answer:
 
         user.points += 100
-
         db.commit()
 
         return {
@@ -297,7 +336,9 @@ def answer_question(
 # ==========================
 
 @app.get("/ranking")
-def ranking(db: Session = Depends(get_db)):
+def ranking(
+    db: Session = Depends(get_db)
+):
 
     users = (
         db.query(User)
@@ -305,19 +346,14 @@ def ranking(db: Session = Depends(get_db)):
         .all()
     )
 
-    ranking_data = []
-
-    for user in users:
-
-        ranking_data.append(
-            {
-                "id": user.id,
-                "username": user.username,
-                "points": user.points
-            }
-        )
-
-    return ranking_data
+    return [
+        {
+            "id": user.id,
+            "username": user.username,
+            "points": user.points
+        }
+        for user in users
+    ]
 
 
 # ==========================
@@ -325,7 +361,9 @@ def ranking(db: Session = Depends(get_db)):
 # ==========================
 
 @app.get("/podium")
-def podium(db: Session = Depends(get_db)):
+def podium(
+    db: Session = Depends(get_db)
+):
 
     users = (
         db.query(User)
@@ -334,22 +372,17 @@ def podium(db: Session = Depends(get_db)):
         .all()
     )
 
-    podium_data = []
-
-    for user in users:
-
-        podium_data.append(
-            {
-                "username": user.username,
-                "points": user.points
-            }
-        )
-
-    return podium_data
+    return [
+        {
+            "username": user.username,
+            "points": user.points
+        }
+        for user in users
+    ]
 
 
 # ==========================
-# WEBSOCKET
+# WEBSOCKET CHAT
 # ==========================
 
 @app.websocket("/ws/{username}")
