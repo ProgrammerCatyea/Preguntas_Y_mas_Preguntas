@@ -38,17 +38,6 @@ app.add_middleware(
 
 
 # ==========================
-# ARCHIVOS ESTÁTICOS
-# ==========================
-
-app.mount(
-    "/static",
-    StaticFiles(directory=str(FRONTEND_DIR)),
-    name="static"
-)
-
-
-# ==========================
 # CREAR TABLAS
 # ==========================
 
@@ -559,6 +548,18 @@ def podium(
 
 
 # ==========================
+# FAVICON
+# ==========================
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    favicon_path = FRONTEND_DIR / "favicon.ico"
+    if favicon_path.exists():
+        return FileResponse(favicon_path)
+    return FileResponse(FRONTEND_DIR / "favicon.ico") if favicon_path.exists() else {}
+
+
+# ==========================
 # WEBSOCKET CHAT
 # ==========================
 
@@ -591,3 +592,14 @@ async def websocket_endpoint(
         await manager.broadcast(
             f"{username} salió"
         )
+
+# ==========================
+# ARCHIVOS ESTÁTICOS
+# (debe ir al final para no interceptar las rutas)
+# ==========================
+
+app.mount(
+    "/static",
+    StaticFiles(directory=str(FRONTEND_DIR)),
+    name="static"
+)
