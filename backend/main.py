@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from passlib.hash import bcrypt
 
@@ -7,6 +8,14 @@ from models import User, Question, Match, Result
 from websocket import manager
 
 app = FastAPI(title="Trivia Multiplayer API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Crear tablas
 Base.metadata.create_all(bind=engine)
