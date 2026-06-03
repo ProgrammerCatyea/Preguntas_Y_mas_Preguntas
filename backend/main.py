@@ -553,10 +553,26 @@ def podium(
 
 @app.get("/favicon.ico", include_in_schema=False)
 def favicon():
+    from fastapi.responses import Response
     favicon_path = FRONTEND_DIR / "favicon.ico"
     if favicon_path.exists():
         return FileResponse(favicon_path)
-    return FileResponse(FRONTEND_DIR / "favicon.ico") if favicon_path.exists() else {}
+    return Response(status_code=204)
+
+
+# ==========================
+# ALIAS CSS Y JS
+# (para cuando el HTML los pide sin /static/)
+# ==========================
+
+@app.get("/style.css", include_in_schema=False)
+def serve_css():
+    return FileResponse(FRONTEND_DIR / "style.css")
+
+
+@app.get("/app.js", include_in_schema=False)
+def serve_js():
+    return FileResponse(FRONTEND_DIR / "app.js")
 
 
 # ==========================
