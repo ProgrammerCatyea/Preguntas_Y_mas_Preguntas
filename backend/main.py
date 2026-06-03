@@ -22,9 +22,9 @@ BASE_DIR = Path(__file__).resolve().parent
 
 # Buscar la carpeta frontend en varias ubicaciones posibles
 _posibles = [
-    BASE_DIR.parent / "frontend",          # corriendo desde backend/
-    BASE_DIR / "frontend",                 # corriendo desde raíz
     Path("/opt/render/project/src/frontend"),  # ruta absoluta en Render
+    BASE_DIR.parent / "frontend",              # corriendo desde backend/
+    BASE_DIR / "frontend",                     # corriendo desde raíz
 ]
 FRONTEND_DIR = next((p for p in _posibles if p.exists()), BASE_DIR.parent / "frontend")
 
