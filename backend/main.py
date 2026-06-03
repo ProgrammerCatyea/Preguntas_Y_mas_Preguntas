@@ -19,7 +19,18 @@ ADMIN_SECRET = os.getenv("ADMIN_SECRET", "admin1234")
 
 
 BASE_DIR = Path(__file__).resolve().parent
-FRONTEND_DIR = BASE_DIR.parent / "frontend"
+
+# Buscar la carpeta frontend en varias ubicaciones posibles
+_posibles = [
+    BASE_DIR.parent / "frontend",          # corriendo desde backend/
+    BASE_DIR / "frontend",                 # corriendo desde raíz
+    Path("/opt/render/project/src/frontend"),  # ruta absoluta en Render
+]
+FRONTEND_DIR = next((p for p in _posibles if p.exists()), BASE_DIR.parent / "frontend")
+
+print(f"BASE_DIR: {BASE_DIR}")
+print(f"FRONTEND_DIR: {FRONTEND_DIR}")
+print(f"FRONTEND_DIR existe: {FRONTEND_DIR.exists()}")
 
 app = FastAPI(title="Trivia Multiplayer API")
 
@@ -60,6 +71,11 @@ def game():
 
 @app.get("/ranking-page")
 def ranking_page():
+    return FileResponse(FRONTEND_DIR / "ranking.html")
+
+
+@app.get("/ranking-page/")
+def ranking_page_slash():
     return FileResponse(FRONTEND_DIR / "ranking.html")
 
 
@@ -553,10 +569,26 @@ def podium(
 
 @app.get("/favicon.ico", include_in_schema=False)
 def favicon():
+    from fastapi.responses import Response
     favicon_path = FRONTEND_DIR / "favicon.ico"
     if favicon_path.exists():
         return FileResponse(favicon_path)
-    return FileResponse(FRONTEND_DIR / "favicon.ico") if favicon_path.exists() else {}
+    return Response(status_code=204)
+
+
+# ==========================
+# ALIAS CSS Y JS
+# (para cuando el HTML los pide sin /static/)
+# ==========================
+
+@app.get("/style.css", include_in_schema=False)
+def serve_css():
+    return FileResponse(FRONTEND_DIR / "style.css")
+
+
+@app.get("/app.js", include_in_schema=False)
+def serve_js():
+    return FileResponse(FRONTEND_DIR / "app.js")
 
 
 # ==========================
